@@ -1,236 +1,65 @@
 import {List, Map} from 'immutable';
 import {expect} from 'chai';
+import {setEntries, getWords} from '../src/core';
 
-import {setEntries, next, vote, restart} from '../src/core';
+describe('Main logic', () => {
+    describe('setEntries', () => {
 
-describe('application logic', () => {
+        it('Adds the existing entries', () => {
+            let state = Map([[
+                'numbersMap', []
+            ], [
+                'inputValue', ''
+            ], [
+                'wordList', []
+            ], [
+                'historyList', []
+            ]]);
+            const entries = ['23', '453'];
+            const nextState = setEntries(state, entries);
+            let stateEntries = nextState.get('historyList');
 
-  describe('setEntries', () => {
-
-    it('adds the entries to the state', () => {
-      const state = Map();
-      const entries = List.of('Trainspotting', '28 Days Later');
-      const nextState = setEntries(state, entries);
-      expect(nextState).to.equal(Map({
-        entries: List.of('Trainspotting', '28 Days Later'),
-        initialEntries: List.of('Trainspotting', '28 Days Later')
-      }));
+            expect(stateEntries).to.deep.equal(entries);
+        });
     });
 
-    it('converts to immutable', () => {
-      const state = Map();
-      const entries = ['Trainspotting', '28 Days Later'];
-      const nextState = setEntries(state, entries);
-      expect(nextState).to.equal(Map({
-        entries: List.of('Trainspotting', '28 Days Later'),
-        initialEntries: List.of('Trainspotting', '28 Days Later')
-      }));
+    describe('getWords', () => {
+
+        it('Constructs words based on digits input', () => {
+            const mockedList = List(["wmt", "wmu", "wmv", "wnt", "wnu", "wnv", "wot", "wou", "wov", "xmt", "xmu", "xmv", "xnt", "xnu", "xnv", "xot", "xou", "xov", "ymt", "ymu", "ymv", "ynt", "ynu", "ynv", "yot", "you", "yov", "zmt", "zmu", "zmv", "znt", "znu", "znv", "zot", "zou", "zov"]);
+            let input = '968';
+            let numbersMap = Map([[
+                '0', ['0']
+            ], [
+                '1', ['1']
+            ], [
+                '2', ['a', 'b', 'c']
+            ], [
+                '3', ['d', 'e', 'f']
+            ], [
+                '4', ['g', 'h', 'i']
+            ], [
+                '5', ['j', 'k', 'l']
+            ], [
+                '6', ['m', 'n', 'o']
+            ], [
+                '7', ['p', 'q', 'r', 's']
+            ], [
+                '8', ['t', 'u', 'v']
+            ], [
+                '9', ['w', 'x', 'y', 'z']
+            ]]);
+            let state = Map({
+                'numbersMap': numbersMap,
+                'inputValue': input,
+                'wordList': [],
+                'historyList': []
+            });
+            let nextState = getWords(state, input);
+            let nextStateRealWords = getWords(state, input, true);
+
+            expect(nextState.get('wordList')).to.deep.equal(mockedList);
+            expect(nextStateRealWords.get('wordList')).to.deep.equal(List(['wot', 'you']));
+        });
     });
-
-  });
-
-  describe('next', () => {
-
-    it('takes the next two entries under vote', () => {
-      const state = Map({
-        entries: List.of('Trainspotting', '28 Days Later', 'Sunshine')
-      });
-      const nextState = next(state);
-      expect(nextState).to.equal(Map({
-        vote: Map({
-          round: 1,
-          pair: List.of('Trainspotting', '28 Days Later')
-        }),
-        entries: List.of('Sunshine')
-      }));
-    });
-
-    it('puts winner of current vote back to entries', () => {
-      expect(
-        next(Map({
-          vote: Map({
-            round: 1,
-            pair: List.of('Trainspotting', '28 Days Later'),
-            tally: Map({
-              'Trainspotting': 4,
-              '28 Days Later': 2
-            })
-          }),
-          entries: List.of('Sunshine', 'Millions', '127 Hours')
-        }))
-      ).to.equal(
-        Map({
-          vote: Map({
-            round: 2,
-            pair: List.of('Sunshine', 'Millions')
-          }),
-          entries: List.of('127 Hours', 'Trainspotting')
-        })
-      );
-    });
-
-    it('puts both from tied vote back to entries', () => {
-      expect(
-        next(Map({
-          vote: Map({
-            round: 1,
-            pair: List.of('Trainspotting', '28 Days Later'),
-            tally: Map({
-              'Trainspotting': 3,
-              '28 Days Later': 3
-            })
-          }),
-          entries: List.of('Sunshine', 'Millions', '127 Hours')
-        }))
-      ).to.equal(
-        Map({
-          vote: Map({
-            round: 2,
-            pair: List.of('Sunshine', 'Millions')
-          }),
-          entries: List.of('127 Hours', 'Trainspotting', '28 Days Later')
-        })
-      );
-    });
-
-    it('marks winner when just one entry left', () => {
-      expect(
-        next(Map({
-          vote: Map({
-            round: 1,
-            pair: List.of('Trainspotting', '28 Days Later'),
-            tally: Map({
-              'Trainspotting': 4,
-              '28 Days Later': 2
-            })
-          }),
-          entries: List()
-        }))
-      ).to.equal(
-        Map({
-          winner: 'Trainspotting'
-        })
-      );
-    });
-
-  });
-
-  describe('restart', () => {
-
-    it('returns to initial entries and takes the first two entries under vote', () => {
-      expect(
-        restart(Map({
-          vote: Map({
-            round: 1,
-            pair: List.of('Trainspotting', 'Sunshine')
-          }),
-          entries: List(),
-          initialEntries: List.of('Trainspotting', '28 Days Later', 'Sunshine')
-        }))
-      ).to.equal(
-        Map({
-          vote: Map({
-            round: 2,
-            pair: List.of('Trainspotting', '28 Days Later')
-          }),
-          entries: List.of('Sunshine'),
-          initialEntries: List.of('Trainspotting', '28 Days Later', 'Sunshine')
-        })
-      );
-    });
-
-  });
-
-  describe('vote', () => {
-
-    it('creates a tally for the voted entry', () => {
-      expect(
-        vote(Map({
-          round: 1,
-          pair: List.of('Trainspotting', '28 Days Later')
-        }), 'Trainspotting', 'voter1')
-      ).to.equal(
-        Map({
-          round: 1,
-          pair: List.of('Trainspotting', '28 Days Later'),
-          tally: Map({
-            'Trainspotting': 1
-          }),
-          votes: Map({
-            voter1: 'Trainspotting'
-          })
-        })
-      );
-    });
-
-    it('adds to existing tally for the voted entry', () => {
-      expect(
-        vote(Map({
-          round: 1,
-          pair: List.of('Trainspotting', '28 Days Later'),
-          tally: Map({
-            'Trainspotting': 3,
-            '28 Days Later': 2
-          }),
-          votes: Map()
-        }), 'Trainspotting', 'voter1')
-      ).to.equal(
-        Map({
-          round: 1,
-          pair: List.of('Trainspotting', '28 Days Later'),
-          tally: Map({
-            'Trainspotting': 4,
-            '28 Days Later': 2
-          }),
-          votes: Map({
-            voter1: 'Trainspotting'
-          })
-        })
-      );
-    });
-
-    it('nullifies previous vote for the same voter', () => {
-      expect(
-        vote(Map({
-          round: 1,
-          pair: List.of('Trainspotting', '28 Days Later'),
-          tally: Map({
-            'Trainspotting': 3,
-            '28 Days Later': 2
-          }),
-          votes: Map({
-            voter1: '28 Days Later'
-          })
-        }), 'Trainspotting', 'voter1')
-      ).to.equal(
-        Map({
-          round: 1,
-          pair: List.of('Trainspotting', '28 Days Later'),
-          tally: Map({
-            'Trainspotting': 4,
-            '28 Days Later': 1
-          }),
-          votes: Map({
-            voter1: 'Trainspotting'
-          })
-        })
-      );
-    });
-
-    it('ignores the vote if for an invalid entry', () => {
-      expect(
-        vote(Map({
-          round: 1,
-          pair: List.of('Trainspotting', '28 Days Later')
-        }), 'Sunshine')
-      ).to.equal(
-        Map({
-          round: 1,
-          pair: List.of('Trainspotting', '28 Days Later')
-        })
-      );
-    });
-
-  });
-
 });
