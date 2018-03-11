@@ -49,10 +49,12 @@ const numbersMap = Map([[
     '9', ['w', 'x', 'y', 'z']
 ]]);
 
-export function setEntries(entries) {
-    const state = store.getState();
-
+export function setEntries(state, entries, callback) {
     let list = state.get('historyList').concat(entries);
+
+    if (callback) {
+        return callback(state.set('historyList', list));
+    }
 
     return state.set('historyList', list);
 }

@@ -1,9 +1,18 @@
 import Server from 'socket.io';
-import {history} from './core.js'
 
 export function startServer(store) {
+    const jsonfile = require ('jsonfile');
     const io = new Server().attach(7171);
     let currentState = store.getState();
+
+    store.dispatch({
+        type: 'SET_HISTORY',
+        entries: jsonfile.readFileSync('./history.json').list,
+        state: currentState,
+        callback: (newState) => {
+            currentState = newState;
+        }
+    });
 
     io.on('connection', (socket) => {
         socket.on('INPUT_CHANGE', (input, filterWords) => {
@@ -34,9 +43,7 @@ export function startServer(store) {
         });
 
         socket.on('TOGGLE_HISTORY_LIST', () => {
-            console.log('SERVER');
-            console.log(history(currentState));
-            socket.emit('HISTORY_LIST_UPDATE', history(currentState));
+            socket.emit('HISTORY_LIST_NEW', currentState.get('historyList'));
         });
     });
 
