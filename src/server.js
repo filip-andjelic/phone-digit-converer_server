@@ -1,23 +1,42 @@
 import Server from 'socket.io';
-import {getWords} from './core';
+import {history} from './core.js'
 
 export function startServer(store) {
     const io = new Server().attach(7171);
-
-    store.subscribe(
-        () => io.emit('state', store.getState().toJS())
-    );
+    let currentState = store.getState();
 
     io.on('connection', (socket) => {
-        console.log('A user connected!');
+        socket.on('INPUT_CHANGE', (input, filterWords) => {
+            store.dispatch({
+                type: 'GET_WORDS',
+                input: input,
+                state: currentState,
+                filterWords: filterWords,
+                callback: (newState, wordList) => {
+                    currentState = newState;
 
-        socket.emit('state', store.getState().toJS());
+                    socket.emit('WORD_LIST', wordList);
+                }
+            });
+        });
 
-        socket.on('action', store.dispatch.bind(store));
-        socket.on('inputChange', (input, filterWords) => {
-            let wordList = getWords(input, filterWords);
+        socket.on('TOGGLE_REAL_WORDS', (realWords) => {
+            store.dispatch({
+                type: 'TOGGLE_REAL_WORDS',
+                realWords: realWords,
+                state: currentState,
+                callback: (newState, isFiltered) => {
+                    currentState = newState;
 
-            io.emit('wordList', wordList);
+                    socket.emit('REAL_WORDS_EDIT', isFiltered);
+                }
+            });
+        });
+
+        socket.on('TOGGLE_HISTORY_LIST', () => {
+            console.log('SERVER');
+            console.log(history(currentState));
+            socket.emit('HISTORY_LIST_UPDATE', history(currentState));
         });
     });
 

@@ -1,4 +1,8 @@
 import {List, Map} from 'immutable';
+import makeStore from './store';
+
+const jsonfile = require('jsonfile');
+
 /*
  * Iterator / Word constructor function.
  * It takes one digit's letter value {String}
@@ -45,34 +49,33 @@ const numbersMap = Map([[
     '9', ['w', 'x', 'y', 'z']
 ]]);
 
-export const INITIAL_STATE = Map([[
-    'numbersMap', numbersMap
-], [
-    'inputValue', ''
-], [
-    'wordList', new List()
-], [
-    'historyList', []
-]]);
+export function setEntries(entries) {
+    const state = store.getState();
 
-export function setEntries(state, entries) {
     let list = state.get('historyList').concat(entries);
-
-    // @TODO edit history.json file with new entries.
 
     return state.set('historyList', list);
 }
 
-export function getEntries(state) {
+export function realWords(state, realWords, callback) {
+    const nextState = state.set('filterWords', realWords);
+
+    if (callback) {
+        return callback(nextState, realWords);
+    }
+}
+
+export function history(state) {
     return state.get('historyList');
 }
+
 /*
  *  Converter's main logic
  *
  *  @param input {String}
  *  @return wordList {Array | String}
  */
-export function getWords(state, input, filterWords) {
+export function getWords(state, input, filterWords, callback) {
     let wordList = new List();
     let checkWord = require('check-word');
     let isStringWord = checkWord('en');
@@ -91,21 +94,46 @@ export function getWords(state, input, filterWords) {
     let digitValues = state.get('numbersMap').get(digits[0]);
 
     digitValues.forEach((letter) => {
-         wordConstructor(letter, remainingDigits, function(word) {
-             wordList = wordList.push(word);
-         });
+        wordConstructor(letter, remainingDigits, function(word) {
+            wordList = wordList.push(word);
+        });
     });
 
     if (filterWords) {
         wordList = wordList.filter(function(someString) {
-           if (isStringWord.check(someString)) {
-               return someString;
-           }
+            if (isStringWord.check(someString)) {
+                return someString;
+            }
         });
     }
 
-    // @TODO edit words.json with new words
+    let historyList = new List(jsonfile.readFileSync('./history.json').list).push(input);
 
-    return state.set('wordList', wordList);
+    jsonfile.writeFileSync('./history.json', {
+        list: historyList.toArray()
+    });
+
+    const nextState = state.set('inputValue', input)
+        .set('filterWords', filterWords)
+        .set('wordList', wordList)
+        .set('historyList', historyList);
+
+    if (callback) {
+        return callback(nextState, wordList);
+    }
+
 }
 
+export const INITIAL_STATE = Map([[
+    'numbersMap', numbersMap
+], [
+    'inputValue', ''
+], [
+    'filterWords', false
+], [
+    'wordList', new List()
+], [
+    'historyList', new List()
+]]);
+
+export const store = makeStore();
