@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "fiesta": "babel-node index.js",
-    "test": "mocha --compilers js:babel-core/register  --require ./test/test_helper.js  --recursive",
-    "test:watch": "npm run test -- --watch"
+    "test": "mocha --compilers js:babel-core/register  --require ./test/test_helper.js  --recursive"
   },
   "author": "",
   "license": "ISC",

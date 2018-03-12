@@ -49,6 +49,7 @@ const numbersMap = Map([[
     '9', ['w', 'x', 'y', 'z']
 ]]);
 
+// Initial setting of history string items
 export function setEntries(state, entries, callback) {
     let list = state.get('historyList').concat(entries);
 
@@ -59,14 +60,14 @@ export function setEntries(state, entries, callback) {
     return state.set('historyList', list);
 }
 
+// Toggling words' list filter
 export function realWords(state, realWords, callback) {
-    const nextState = state.set('filterWords', realWords);
+    const existingInput = state.get('inputValue');
 
-    if (callback) {
-        return callback(nextState, realWords);
-    }
+    return getWords(state, existingInput, realWords, callback);
 }
 
+// History list items getter
 export function history(state) {
     return state.get('historyList');
 }
@@ -75,7 +76,7 @@ export function history(state) {
  *  Converter's main logic
  *
  *  @param input {String}
- *  @return wordList {Array | String}
+ *  @return callback
  */
 export function getWords(state, input, filterWords, callback) {
     let wordList = new List();
@@ -121,8 +122,10 @@ export function getWords(state, input, filterWords, callback) {
         .set('historyList', historyList);
 
     if (callback) {
-        return callback(nextState, wordList);
+        return callback(nextState, wordList, filterWords);
     }
+
+    return nextState;
 
 }
 

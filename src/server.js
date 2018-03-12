@@ -5,6 +5,7 @@ export function startServer(store) {
     const io = new Server().attach(7171);
     let currentState = store.getState();
 
+    // Read initial history list from server
     store.dispatch({
         type: 'SET_HISTORY',
         entries: jsonfile.readFileSync('./history.json').list,
@@ -15,6 +16,11 @@ export function startServer(store) {
     });
 
     io.on('connection', (socket) => {
+        console.log(currentState.get('inputValue'));
+        // When user connects load input value from server Store
+        socket.emit('INPUT_UPDATE', currentState.get('inputValue'));
+
+        // Listener for handling user input, and serving words' list
         socket.on('INPUT_CHANGE', (input, filterWords) => {
             store.dispatch({
                 type: 'GET_WORDS',
@@ -29,14 +35,16 @@ export function startServer(store) {
             });
         });
 
+        // Listener for toggling filter on words' list
         socket.on('TOGGLE_REAL_WORDS', (realWords) => {
             store.dispatch({
                 type: 'TOGGLE_REAL_WORDS',
                 realWords: realWords,
                 state: currentState,
-                callback: (newState, isFiltered) => {
+                callback: (newState, wordList, isFiltered) => {
                     currentState = newState;
 
+                    socket.emit('WORD_LIST', wordList);
                     socket.emit('REAL_WORDS_EDIT', isFiltered);
                 }
             });
