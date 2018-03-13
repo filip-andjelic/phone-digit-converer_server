@@ -59,7 +59,7 @@ describe('Main logic', () => {
             let nextStateRealWords = getWords(state, input, true);
 
             expect(nextState.get('wordList')).to.deep.equal(mockedList);
-            expect(nextStateRealWords.get('wordList')).to.deep.equal(List(['wot', 'you']));
+            expect(nextStateRealWords.get('wordList').toArray()).to.deep.equal(['wot', 'you']);
         });
     });
 });
