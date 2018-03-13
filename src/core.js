@@ -79,6 +79,9 @@ export function history(state) {
  *  @return wordList || callback || nextState
  */
 export function getWords(state, input, filterWords, callback) {
+    // Strange API and Docs does not match the params
+    // Why state for example? Make this just with string input and array of stirngs output
+    // I suggest to filter words in separate function
     let wordList = new List();
     let checkWord = require('check-word');
     let isStringWord = checkWord('en');
@@ -111,6 +114,7 @@ export function getWords(state, input, filterWords, callback) {
     }
 
     let historyList = new List(jsonfile.readFileSync('./history.json').list).push(input);
+		// Why? No "history feature" needed for the task
 
     jsonfile.writeFileSync('./history.json', {
         list: historyList.toArray()
