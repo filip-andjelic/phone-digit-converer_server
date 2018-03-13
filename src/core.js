@@ -75,8 +75,8 @@ export function history(state) {
 /*
  *  Converter's main logic
  *
- *  @param input {String}
- *  @return callback
+ *  @param state {Map} input {String} filterWords {Bool} callback {fn}
+ *  @return wordList || callback || nextState
  */
 export function getWords(state, input, filterWords, callback) {
     let wordList = new List();
@@ -90,7 +90,7 @@ export function getWords(state, input, filterWords, callback) {
     let digits = input.split('');
 
     if (!digits[0] || typeof digits[0] !== 'string') {
-        return;
+        return wordList;
     }
 
     let remainingDigits = digits.slice(1);

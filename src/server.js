@@ -16,7 +16,6 @@ export function startServer(store) {
     });
 
     io.on('connection', (socket) => {
-        console.log(currentState.get('inputValue'));
         // When user connects load input value from server Store
         socket.emit('INPUT_UPDATE', currentState.get('inputValue'));
 
