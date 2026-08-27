@@ -35,5 +35,7 @@ Now, direct your console/command prompt to folder where you extracted project. A
 In order to serve files on Node simulated server, just run `yarn run fiesta` command in same folder where you ran node command before. If you take a look at `package.json` file, you'll see some scripts named there. We'll leave them be for now, they'll be user in near future. 
 
 Our app will be served on port `8080`, so hit `http://localhost:8080/` in your favorite browser.
+> Not working :-(
+> btw `yarn test` exit with Error: Cannot find module './test/test_helper.js'
 
 `Make sure you run client project as well, in order not to get your browser's console running all red.`
